@@ -8,7 +8,7 @@
       "element": "section",
       "label": "TRANSLATE.PLUGIN_SECTION_TITLE",
       "icon": "fa-plug",
-      "onSave": {"type":"controller", "endpoint":"user_interface/mqttcontroller", "method":"saveSettings"},
+      "onSave": {"type":"controller", "endpoint":"user_interface/volumio2mqtt", "method":"saveSettings"},
       "saveButton": {
         "label": "TRANSLATE.SAVE",
         "data": [
