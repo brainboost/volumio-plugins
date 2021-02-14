@@ -1,0 +1,30 @@
+{
+  "enabled": {
+    "type": "boolean",
+    "value": false
+  },
+  "username": {
+      "type": "string",
+      "value": ""
+  },
+  "password": {
+    "type": "string",
+    "value": ""
+  },
+  "server": {
+    "type": "string",
+    "value": "mqtt.loca.lan"
+  },
+  "statustopic": {
+    "type": "string",
+    "value": "volumio/status"
+  },
+  "controltopic": {
+    "type": "string",
+    "value": "volumio/control"
+  },
+  "clientid": {
+    "type": "string",
+    "value": "volumio"
+  }
+}
