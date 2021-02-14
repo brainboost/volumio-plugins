@@ -1,15 +1,15 @@
 {
-	"name": "mqttcontroller",
+	"name": "volumio2mqtt",
 	"version": "1.0.0",
 	"description": "allows to use mqtt bus to publish volumio status and send commands",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"author": "jit06,brainboost",
+	"author": "brainboost",
 	"license": "ISC",
 	"volumio_info": {
-		"prettyName": "MqttController",
+		"prettyName": "Volumio2MQTT",
 		"icon": "fa-lightbulb-o",
 		"plugin_type": "user_interface"
 	},

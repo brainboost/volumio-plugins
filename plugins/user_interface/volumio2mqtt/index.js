@@ -12,9 +12,9 @@ var mqtt = require('mqtt');
 var running = false;
 var currentState = "unknown";
 
-module.exports = status2mqtt;
+module.exports = volumio2mqtt;
 
-function status2mqtt(context) {
+function volumio2mqtt(context) {
 	var self = this;
 
 	this.context = context;
@@ -24,16 +24,16 @@ function status2mqtt(context) {
 }
 
 
-status2mqtt.prototype.onVolumioStart = function() {
+volumio2mqtt.prototype.onVolumioStart = function() {
 	var self = this;
-	var configFile=this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
+	var configFile = this.commandRouter.pluginManager.getConfigurationFile(this.context,'config.json');
 	this.config = new (require('v-conf'))();
 	this.config.loadFile(configFile);
         
         socket.on('pushState', function (state) {
             if (self.running) {
                 if (state.status !== self.currentState) {
-                    self.logger.info("Status2Mqtt: state changed from -" + self.currentState +"- to -" + state.status + "-");
+                    self.logger.info(`volumio2mqtt: state changed from -${self.currentState}- to -${state.status}-`);
                     self.sendMqttMessage(state);                   
                 }
                 self.currentState = state.status;
@@ -44,9 +44,9 @@ status2mqtt.prototype.onVolumioStart = function() {
 }
 
 
-status2mqtt.prototype.onStart = function() {
+volumio2mqtt.prototype.onStart = function() {
     var self = this;
-    var defer=libQ.defer();
+    var defer = libQ.defer();
     
     self.load18nStrings();
     self.running = true;
@@ -58,12 +58,12 @@ return defer.promise;
 };
 
 
-status2mqtt.prototype.sendMqttMessage = function(state) {
+volumio2mqtt.prototype.sendMqttMessage = function(state) {
     var self = this;
     var server = self.config.get('server');
     
     if(!server.trim() || ( !server.startsWith('mqtt://') && !server.startsWith('mqtts://') )) {
-        self.logger.info("status2mqtt: Server is not valid, not doing anything...");
+        self.logger.info("volumio2mqtt: Server is not valid, not doing anything...");
         return;
     }
     
@@ -83,24 +83,24 @@ status2mqtt.prototype.sendMqttMessage = function(state) {
     
     var mqttClient = mqtt.connect(server, mqttOptions);
     
-    self.logger.info("status2mqtt: trying to connect to mqtt server " + server);
+    self.logger.info(`volumio2mqtt: trying to connect to mqtt server ${server}`);
     
     mqttClient.on("connect",function(){
-        self.logger.info("status2mqtt: mqtt connected");
+        self.logger.info("volumio2mqtt: mqtt connected");
         mqttClient.publish(self.config.get('topic'), JSON.stringify(mqttState));
         mqttClient.end();
     });
     
     mqttClient.on("error",function(error){
-        self.logger.info("status2mqtt: Can't connect to mqtt server " +error);
+        self.logger.info(`volumio2mqtt: Can't connect to mqtt server ${error}`);
         mqttClient.end();
     });
 }
 
 
-status2mqtt.prototype.onStop = function() {
+volumio2mqtt.prototype.onStop = function() {
     var self = this;
-    var defer=libQ.defer();
+    var defer = libQ.defer();
 
     self.running = false;
     
@@ -111,7 +111,7 @@ status2mqtt.prototype.onStop = function() {
 };
 
 
-status2mqtt.prototype.onRestart = function() {
+volumio2mqtt.prototype.onRestart = function() {
     var self = this;
     
     // Optional, use if you need it
@@ -120,22 +120,22 @@ status2mqtt.prototype.onRestart = function() {
 
 // Configuration Methods -----------------------------------------------------------------------------
 
-status2mqtt.prototype.getUIConfig = function() {
+volumio2mqtt.prototype.getUIConfig = function() {
     var defer = libQ.defer();
     var self = this;
 
     var lang_code = this.commandRouter.sharedVars.get('language_code');
 
-    self.commandRouter.i18nJson(__dirname+'/i18n/strings_'+lang_code+'.json',
-        __dirname+'/i18n/strings_en.json',
-        __dirname + '/UIConfig.json')
+    self.commandRouter.i18nJson(`${__dirname}/i18n/strings_${lang_code}.json`,
+        `${__dirname}/i18n/strings_en.json`,
+        `${__dirname}/UIConfig.json`)
         .then(function(uiconf)
         {
             uiconf.sections[0].content[0].value = self.config.get('username');
             uiconf.sections[0].content[1].value = self.config.get('password');
             uiconf.sections[0].content[2].value = self.config.get('server');
-            uiconf.sections[0].content[3].value = self.config.get('topic');
-            uiconf.sections[0].content[3].value = self.config.get('clientid');
+            uiconf.sections[0].content[3].value = self.config.get('statustopic');
+            uiconf.sections[0].content[4].value = self.config.get('clientid');
 
             defer.resolve(uiconf);
         })
@@ -147,15 +147,15 @@ status2mqtt.prototype.getUIConfig = function() {
     return defer.promise;
 };
 
-status2mqtt.prototype.saveSettings = function (data)
+volumio2mqtt.prototype.saveSettings = function (data)
 {
 	var self = this;
 	var defer = libQ.defer();
 
 	self.config.set('username', data['username']);
         self.config.set('password', data['password']);
-        self.config.set('server'  , data['server']);
-        self.config.set('topic'   , data['topic']);
+        self.config.set('server', data['server']);
+        self.config.set('statustopic', data['statustopic']);
         self.config.set('clientid', data['clientid']);
 	
         defer.resolve();
@@ -171,24 +171,24 @@ status2mqtt.prototype.saveSettings = function (data)
 	return defer.promise;
 };
 
-status2mqtt.prototype.getConfigurationFiles = function() {
+volumio2mqtt.prototype.getConfigurationFiles = function() {
 	return ['config.json'];
 }
 
-status2mqtt.prototype.load18nStrings = function () {
+volumio2mqtt.prototype.load18nStrings = function () {
     var self = this;
 
     try {
         var language_code = this.commandRouter.sharedVars.get('language_code');
-        self.i18nStrings = fs.readJsonSync(__dirname + '/i18n/strings_' + language_code + ".json");
+        self.i18nStrings = fs.readJsonSync(`${__dirname}/i18n/strings_${language_code}.json`);
     } catch (e) {
-        self.i18nStrings = fs.readJsonSync(__dirname + '/i18n/strings_en.json');
+        self.i18nStrings = fs.readJsonSync(`${__dirname}/i18n/strings_en.json`);
     }
 
-    self.i18nStringsDefaults = fs.readJsonSync(__dirname + '/i18n/strings_en.json');
+    self.i18nStringsDefaults = fs.readJsonSync(`${__dirname}/i18n/strings_en.json`);
 };
 
-status2mqtt.prototype.getI18nString = function (key) {
+volumio2mqtt.prototype.getI18nString = function (key) {
     var self = this;
 
     if (self.i18nStrings[key] !== undefined)
@@ -197,17 +197,17 @@ status2mqtt.prototype.getI18nString = function (key) {
         return self.i18nStringsDefaults[key];
 };
 
-status2mqtt.prototype.setUIConfig = function(data) {
+volumio2mqtt.prototype.setUIConfig = function(data) {
 	var self = this;
 	//Perform your installation tasks here
 };
 
-status2mqtt.prototype.getConf = function(varName) {
+volumio2mqtt.prototype.getConf = function(varName) {
 	var self = this;
 	//Perform your installation tasks here
 };
 
-status2mqtt.prototype.setConf = function(varName, varValue) {
+volumio2mqtt.prototype.setConf = function(varName, varValue) {
 	var self = this;
 	//Perform your installation tasks here
 };
